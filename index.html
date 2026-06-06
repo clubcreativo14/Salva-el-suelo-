@@ -458,57 +458,80 @@ function renderRound() {
   cont.innerHTML = "";
   cont.style.display = "flex";
 
-  r.opciones.forEach((op, i) => {
-    const btn = document.createElement("button");
+  r.opciones.forEach(function(op) {
+    var btn = document.createElement("button");
     btn.className = "option-btn";
-    btn.innerHTML = `<span class="op-emoji">${op.emoji}</span><span class="op-text">${op.texto}</span>`;
-    btn.onclick = () => elegir(op);
+    var spanEmoji = document.createElement("span");
+    spanEmoji.className = "op-emoji";
+    spanEmoji.textContent = op.emoji;
+    var spanText = document.createElement("span");
+    spanText.className = "op-text";
+    spanText.textContent = op.texto;
+    btn.appendChild(spanEmoji);
+    btn.appendChild(spanText);
+    btn.onclick = function() { elegir(op); };
     cont.appendChild(btn);
   });
 }
 
 function elegir(op) {
-  // Visual highlight
-  document.querySelectorAll(".option-btn").forEach(b => b.style.opacity = "0.4");
-  document.getElementById("options-container").style.pointerEvents = "none";
+  // Deshabilitar botones
+  document.querySelectorAll(".option-btn").forEach(b => {
+    b.style.opacity = "0.4";
+    b.onclick = null;
+  });
 
-  setTimeout(() => {
-    puntos += op.puntos;
-    historial.push({ ronda: ROUNDS[ronda], opcion: op });
-    updateHealthBar();
+  puntos += op.puntos;
+  historial.push({ ronda: ROUNDS[ronda], opcion: op });
+  updateHealthBar();
 
-    // Points animation
-    const pa = document.getElementById("pts-anim");
-    pa.textContent = op.puntos > 0 ? `+${op.puntos} 🌱` : `${op.puntos} 💀`;
-    pa.style.color = op.puntos > 0 ? "#2D6A4F" : "#E63946";
-    pa.style.animation = "none";
-    void pa.offsetWidth;
-    pa.style.animation = "popIn 0.4s ease";
+  // Animación de puntos
+  var pa = document.getElementById("pts-anim");
+  pa.textContent = op.puntos > 0 ? ("+" + op.puntos + " 🌱") : (op.puntos + " 💀");
+  pa.style.color = op.puntos > 0 ? "#2D6A4F" : "#E63946";
 
-    // Hide options, show feedback
-    document.getElementById("options-container").style.display = "none";
-    showFeedback(op);
-  }, 300);
+  // Ocultar opciones y mostrar feedback
+  document.getElementById("options-container").style.display = "none";
+  showFeedback(op);
 }
 
 function showFeedback(op) {
-  const isGood = op.puntos > 0;
-  const cont = document.getElementById("feedback-container");
-  const btnLabel = (ronda + 1 >= ROUNDS.length) ? "Ver resultado 🏁" : "Siguiente decisión →";
+  var isGood = op.puntos > 0;
+  var cont = document.getElementById("feedback-container");
+  var btnLabel = (ronda + 1 >= ROUNDS.length) ? "Ver resultado 🏁" : "Siguiente decisión →";
 
-  cont.innerHTML = `
-    <div class="feedback-box" style="background:${op.bgColor};border:3px solid ${op.color};">
-      <span class="feedback-icon">${isGood ? "🎉" : "😬"}</span>
-      <div class="feedback-title" style="color:${op.color};">
-        ${isGood ? "¡Buena decisión!" : "¡Eso tiene consecuencias!"}
-      </div>
-      <p class="feedback-text">${op.consecuencia}</p>
-      <button class="btn-block" style="background:linear-gradient(135deg,${op.color},${op.color}BB);"
-        onclick="siguiente()">
-        ${btnLabel}
-      </button>
-    </div>
-  `;
+  // Crear elementos sin innerHTML para evitar bugs en iOS
+  var box = document.createElement("div");
+  box.className = "feedback-box";
+  box.style.background = op.bgColor;
+  box.style.border = "3px solid " + op.color;
+
+  var icon = document.createElement("span");
+  icon.className = "feedback-icon";
+  icon.textContent = isGood ? "🎉" : "😬";
+
+  var title = document.createElement("div");
+  title.className = "feedback-title";
+  title.style.color = op.color;
+  title.textContent = isGood ? "¡Buena decisión!" : "¡Eso tiene consecuencias!";
+
+  var txt = document.createElement("p");
+  txt.className = "feedback-text";
+  txt.textContent = op.consecuencia;
+
+  var btn = document.createElement("button");
+  btn.className = "btn-block";
+  btn.style.background = op.color;
+  btn.textContent = btnLabel;
+  btn.onclick = siguiente;
+
+  box.appendChild(icon);
+  box.appendChild(title);
+  box.appendChild(txt);
+  box.appendChild(btn);
+
+  cont.innerHTML = "";
+  cont.appendChild(box);
 }
 
 function siguiente() {
